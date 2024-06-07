@@ -1,9 +1,3 @@
-//go:generate go run github.com/tinylib/msgp -unexported -tests=false -v
-//msgp:tuple Tick
-//msgp:shim *uint256.Int as:[]byte using:msgpencode.EncodeUint256/msgpencode.DecodeUint256
-//msgp:shim *utils.Int128 as:[]byte using:msgpencode.EncodeInt256/msgpencode.DecodeInt256
-//msgp:ignore TickDataProvider
-
 package entities
 
 import (
