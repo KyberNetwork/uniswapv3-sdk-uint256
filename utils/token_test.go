@@ -1,4 +1,4 @@
-package entities
+package utils
 
 import (
 	"testing"

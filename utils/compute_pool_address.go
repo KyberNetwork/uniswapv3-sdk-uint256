@@ -9,7 +9,6 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 
 	"github.com/KyberNetwork/uniswapv3-sdk-uint256/constants"
-	kentities "github.com/KyberNetwork/uniswapv3-sdk-uint256/entities"
 )
 
 /**
@@ -22,7 +21,7 @@ import (
  */
 func ComputePoolAddress(factoryAddress common.Address, tokenA *entities.Token, tokenB *entities.Token,
 	fee constants.FeeAmount, initCodeHashManualOverride string) (common.Address, error) {
-	isSorted, err := kentities.SortsBefore(tokenA, tokenB)
+	isSorted, err := SortsBefore(tokenA, tokenB)
 	if err != nil {
 		return common.Address{}, err
 	}

@@ -118,7 +118,7 @@ func NewPoolV2(tokenA, tokenB *entities.Token, fee constants.FeeAmount, sqrtRati
 	}
 	token0 := tokenA
 	token1 := tokenB
-	isSorted, err := SortsBefore(tokenA, tokenB)
+	isSorted, err := utils.SortsBefore(tokenA, tokenB)
 	if err != nil {
 		return nil, err
 	}
