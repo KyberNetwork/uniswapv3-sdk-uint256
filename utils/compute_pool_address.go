@@ -3,11 +3,13 @@ package utils
 import (
 	"math/big"
 
-	"github.com/KyberNetwork/uniswapv3-sdk-uint256/constants"
 	"github.com/daoleno/uniswap-sdk-core/entities"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
+
+	"github.com/KyberNetwork/uniswapv3-sdk-uint256/constants"
+	kentities "github.com/KyberNetwork/uniswapv3-sdk-uint256/entities"
 )
 
 /**
@@ -18,8 +20,9 @@ import (
  * @param fee The fee tier of the pool
  * @returns The pool address
  */
-func ComputePoolAddress(factoryAddress common.Address, tokenA *entities.Token, tokenB *entities.Token, fee constants.FeeAmount, initCodeHashManualOverride string) (common.Address, error) {
-	isSorted, err := tokenA.SortsBefore(tokenB)
+func ComputePoolAddress(factoryAddress common.Address, tokenA *entities.Token, tokenB *entities.Token,
+	fee constants.FeeAmount, initCodeHashManualOverride string) (common.Address, error) {
+	isSorted, err := kentities.SortsBefore(tokenA, tokenB)
 	if err != nil {
 		return common.Address{}, err
 	}
@@ -37,7 +40,8 @@ func ComputePoolAddress(factoryAddress common.Address, tokenA *entities.Token, t
 	return getCreate2Address(factoryAddress, token0.Address, token1.Address, fee, initCodeHashManualOverride), nil
 }
 
-func getCreate2Address(factoyAddress, addressA, addressB common.Address, fee constants.FeeAmount, initCodeHashManualOverride string) common.Address {
+func getCreate2Address(factoyAddress, addressA, addressB common.Address, fee constants.FeeAmount,
+	initCodeHashManualOverride string) common.Address {
 	var salt [32]byte
 	copy(salt[:], crypto.Keccak256(abiEncode(addressA, addressB, fee)))
 

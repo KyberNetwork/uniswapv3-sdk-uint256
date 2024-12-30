@@ -3,8 +3,10 @@ package utils
 import (
 	"math/big"
 
-	"github.com/KyberNetwork/uniswapv3-sdk-uint256/constants"
 	"github.com/daoleno/uniswap-sdk-core/entities"
+
+	"github.com/KyberNetwork/uniswapv3-sdk-uint256/constants"
+	kentities "github.com/KyberNetwork/uniswapv3-sdk-uint256/entities"
 )
 
 /**
@@ -21,7 +23,7 @@ func TickToPrice(baseToken *entities.Token, quoteToken *entities.Token, tick int
 	}
 	ratioX192 := new(big.Int).Mul(sqrtRatioX96, sqrtRatioX96)
 
-	sorted, err := baseToken.SortsBefore(quoteToken)
+	sorted, err := kentities.SortsBefore(baseToken, quoteToken)
 	if err != nil {
 		return nil, err
 	}
@@ -37,7 +39,7 @@ func TickToPrice(baseToken *entities.Token, quoteToken *entities.Token, tick int
  * i.e. the price of the returned tick is less than or equal to the input price
  */
 func PriceToClosestTick(price *entities.Price, baseToken, quoteToken *entities.Token) (int, error) {
-	sorted, err := baseToken.SortsBefore(quoteToken)
+	sorted, err := kentities.SortsBefore(baseToken, quoteToken)
 	if err != nil {
 		return 0, err
 	}

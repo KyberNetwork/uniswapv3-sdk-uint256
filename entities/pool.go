@@ -5,11 +5,12 @@ import (
 	"math/big"
 
 	"github.com/KyberNetwork/int256"
-	"github.com/KyberNetwork/uniswapv3-sdk-uint256/constants"
-	"github.com/KyberNetwork/uniswapv3-sdk-uint256/utils"
 	"github.com/daoleno/uniswap-sdk-core/entities"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/holiman/uint256"
+
+	"github.com/KyberNetwork/uniswapv3-sdk-uint256/constants"
+	"github.com/KyberNetwork/uniswapv3-sdk-uint256/utils"
 )
 
 var (
@@ -69,12 +70,14 @@ type GetAmountResultV2 struct {
 	CrossInitTickLoops int
 }
 
-func GetAddress(tokenA, tokenB *entities.Token, fee constants.FeeAmount, initCodeHashManualOverride string) (common.Address, error) {
+func GetAddress(tokenA, tokenB *entities.Token, fee constants.FeeAmount,
+	initCodeHashManualOverride string) (common.Address, error) {
 	return utils.ComputePoolAddress(constants.FactoryAddress, tokenA, tokenB, fee, initCodeHashManualOverride)
 }
 
 // deprecated
-func NewPool(tokenA, tokenB *entities.Token, fee constants.FeeAmount, sqrtRatioX96 *big.Int, liquidity *big.Int, tickCurrent int, ticks TickDataProvider) (*Pool, error) {
+func NewPool(tokenA, tokenB *entities.Token, fee constants.FeeAmount, sqrtRatioX96 *big.Int, liquidity *big.Int,
+	tickCurrent int, ticks TickDataProvider) (*Pool, error) {
 	return NewPoolV2(
 		tokenA, tokenB, fee,
 		uint256.MustFromBig(sqrtRatioX96),
@@ -94,7 +97,8 @@ func NewPool(tokenA, tokenB *entities.Token, fee constants.FeeAmount, sqrtRatioX
  * @param tickCurrent The current tick of the pool
  * @param ticks The current state of the pool ticks or a data provider that can return tick data
  */
-func NewPoolV2(tokenA, tokenB *entities.Token, fee constants.FeeAmount, sqrtRatioX96 *utils.Uint160, liquidity *utils.Uint128, tickCurrent int, ticks TickDataProvider) (*Pool, error) {
+func NewPoolV2(tokenA, tokenB *entities.Token, fee constants.FeeAmount, sqrtRatioX96 *utils.Uint160,
+	liquidity *utils.Uint128, tickCurrent int, ticks TickDataProvider) (*Pool, error) {
 	if fee >= constants.FeeMax {
 		return nil, ErrFeeTooHigh
 	}
@@ -114,7 +118,7 @@ func NewPoolV2(tokenA, tokenB *entities.Token, fee constants.FeeAmount, sqrtRati
 	}
 	token0 := tokenA
 	token1 := tokenB
-	isSorted, err := tokenA.SortsBefore(tokenB)
+	isSorted, err := SortsBefore(tokenA, tokenB)
 	if err != nil {
 		return nil, err
 	}
@@ -130,7 +134,7 @@ func NewPoolV2(tokenA, tokenB *entities.Token, fee constants.FeeAmount, sqrtRati
 		SqrtRatioX96:     sqrtRatioX96,
 		Liquidity:        liquidity,
 		TickCurrent:      tickCurrent,
-		TickDataProvider: ticks, // TODO: new tick data provider
+		TickDataProvider: ticks,
 	}, nil
 }
 
@@ -148,7 +152,8 @@ func (p *Pool) Token0Price() *entities.Price {
 	if p.token0Price != nil {
 		return p.token0Price
 	}
-	p.token0Price = entities.NewPrice(p.Token0, p.Token1, constants.Q192, new(uint256.Int).Mul(p.SqrtRatioX96, p.SqrtRatioX96).ToBig())
+	p.token0Price = entities.NewPrice(p.Token0, p.Token1, constants.Q192,
+		new(uint256.Int).Mul(p.SqrtRatioX96, p.SqrtRatioX96).ToBig())
 	return p.token0Price
 }
 
@@ -157,7 +162,8 @@ func (p *Pool) Token1Price() *entities.Price {
 	if p.token1Price != nil {
 		return p.token1Price
 	}
-	p.token1Price = entities.NewPrice(p.Token1, p.Token0, new(uint256.Int).Mul(p.SqrtRatioX96, p.SqrtRatioX96).ToBig(), constants.Q192)
+	p.token1Price = entities.NewPrice(p.Token1, p.Token0, new(uint256.Int).Mul(p.SqrtRatioX96, p.SqrtRatioX96).ToBig(),
+		constants.Q192)
 	return p.token1Price
 }
 
@@ -187,7 +193,8 @@ func (p *Pool) ChainID() uint {
  * @param sqrtPriceLimitX96 The Q64.96 sqrt price limit
  * @returns The output amount and the pool with updated state
  */
-func (p *Pool) GetOutputAmount(inputAmount *entities.CurrencyAmount, sqrtPriceLimitX96 *utils.Uint160) (*GetAmountResult, error) {
+func (p *Pool) GetOutputAmount(inputAmount *entities.CurrencyAmount,
+	sqrtPriceLimitX96 *utils.Uint160) (*GetAmountResult, error) {
 	if !(inputAmount.Currency.IsToken() && p.InvolvesToken(inputAmount.Currency.Wrapped())) {
 		return nil, ErrTokenNotInvolved
 	}
@@ -219,14 +226,16 @@ func (p *Pool) GetOutputAmount(inputAmount *entities.CurrencyAmount, sqrtPriceLi
 		return nil, err
 	}
 	return &GetAmountResult{
-		ReturnedAmount:     entities.FromRawAmount(outputToken, new(utils.Int256).Neg(swapResult.amountCalculated).ToBig()),
+		ReturnedAmount: entities.FromRawAmount(outputToken,
+			new(utils.Int256).Neg(swapResult.amountCalculated).ToBig()),
 		RemainingAmountIn:  entities.FromRawAmount(inputAmount.Currency, swapResult.remainingAmountIn.ToBig()),
 		NewPoolState:       pool,
 		CrossInitTickLoops: swapResult.crossInitTickLoops,
 	}, nil
 }
 
-func (p *Pool) GetOutputAmountV2(inputAmount *utils.Int256, zeroForOne bool, sqrtPriceLimitX96 *utils.Uint160) (*GetAmountResultV2, error) {
+func (p *Pool) GetOutputAmountV2(inputAmount *utils.Int256, zeroForOne bool,
+	sqrtPriceLimitX96 *utils.Uint160) (*GetAmountResultV2, error) {
 	swapResult, err := p.swap(zeroForOne, inputAmount, sqrtPriceLimitX96)
 	if err != nil {
 		return nil, err
@@ -247,7 +256,8 @@ func (p *Pool) GetOutputAmountV2(inputAmount *utils.Int256, zeroForOne bool, sqr
  * @param sqrtPriceLimitX96 The Q64.96 sqrt price limit. If zero for one, the price cannot be less than this value after the swap. If one for zero, the price cannot be greater than this value after the swap
  * @returns The input amount and the pool with updated state
  */
-func (p *Pool) GetInputAmount(outputAmount *entities.CurrencyAmount, sqrtPriceLimitX96 *utils.Uint160) (*entities.CurrencyAmount, *Pool, error) {
+func (p *Pool) GetInputAmount(outputAmount *entities.CurrencyAmount,
+	sqrtPriceLimitX96 *utils.Uint160) (*entities.CurrencyAmount, *Pool, error) {
 	if !(outputAmount.Currency.IsToken() && p.InvolvesToken(outputAmount.Currency.Wrapped())) {
 		return nil, nil, ErrTokenNotInvolved
 	}
@@ -292,7 +302,8 @@ func (p *Pool) GetInputAmount(outputAmount *entities.CurrencyAmount, sqrtPriceLi
  * @returns swapResult.liquidity
  * @returns swapResult.tickCurrent
  */
-func (p *Pool) swap(zeroForOne bool, amountSpecified *utils.Int256, sqrtPriceLimitX96 *utils.Uint160) (*SwapResult, error) {
+func (p *Pool) swap(zeroForOne bool, amountSpecified *utils.Int256, sqrtPriceLimitX96 *utils.Uint160) (*SwapResult,
+	error) {
 	var err error
 	if sqrtPriceLimitX96 == nil {
 		if zeroForOne {
@@ -379,7 +390,8 @@ func (p *Pool) swap(zeroForOne bool, amountSpecified *utils.Int256, sqrtPriceLim
 		}
 
 		var nxtSqrtPriceX96 utils.Uint160
-		err = utils.ComputeSwapStep(state.sqrtPriceX96, &targetValue, state.liquidity, state.amountSpecifiedRemaining, p.Fee,
+		err = utils.ComputeSwapStep(state.sqrtPriceX96, &targetValue, state.liquidity, state.amountSpecifiedRemaining,
+			p.Fee,
 			&nxtSqrtPriceX96, &step.amountIn, &step.amountOut, &step.feeAmount)
 		if err != nil {
 			return nil, err
